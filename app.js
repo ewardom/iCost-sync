@@ -798,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dropLoading.classList.remove('hidden');
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/parse-pdf', {
+            const response = await fetch('https://i-cost-sync.vercel.app/parse-pdf', {
                 method: 'POST',
                 body: formData
             });
