@@ -57,7 +57,7 @@ body::before {
 .app {
     position: relative;
     z-index: 1;
-    max-width: 960px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 40px 24px 80px;
 }
@@ -65,8 +65,49 @@ body::before {
 /* ---- Header ---- */
 .header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
     animation: fadeInDown 0.6s ease;
+}
+
+/* ---- Main Nav ---- */
+.main-nav {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    animation: fadeInDown 0.5s ease;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+    border-color: var(--accent-a);
+    color: var(--text-primary);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.view-section.hidden {
+    display: none;
 }
 
 .logo {
@@ -701,9 +742,21 @@ body::before {
 }
 
 .remark-cell {
-    max-width: 120px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#table-splitter .remark-cell {
+    white-space: normal;
+    word-break: break-word;
+    max-width: 350px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+#table-splitter td:first-child {
     white-space: nowrap;
 }
 
@@ -724,6 +777,81 @@ body::before {
 }
 
 .empty-message.hidden { display: none; }
+
+/* ---- Splitter Specific ---- */
+.split-controls {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-input);
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.split-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.split-btn:hover {
+    color: var(--text-primary);
+}
+
+.split-btn.active {
+    background: var(--accent-a);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.custom-amounts {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.custom-amounts.hidden {
+    display: none;
+}
+
+.amount-input-group {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.amount-input-group span {
+    color: var(--text-muted);
+    margin-right: 4px;
+}
+
+.amount-input-group input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    width: 60px;
+    outline: none;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.drop-loading {
+    text-align: center;
+    color: var(--accent-a);
+}
+
+.drop-loading.hidden { display: none; }
 
 /* ---- Animations ---- */
 @keyframes fadeInUp {
@@ -748,6 +876,11 @@ body::before {
     .config-grid {
         grid-template-columns: 1fr;
     }
+    .config-full {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
     .results-tabs {
         flex-direction: column;
     }
@@ -755,5 +888,95 @@ body::before {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
+    }
+    
+    /* Responsive Table (Compact Card View) */
+    .results-table, 
+    .results-table tbody {
+        display: block;
+        width: 100%;
+    }
+    
+    .results-table thead {
+        display: none;
+    }
+    
+    .results-table tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: 
+            "date amount"
+            "concept concept"
+            "split split"
+            "cat subcat";
+        gap: 10px 12px;
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--bg-card);
+        padding: 14px;
+    }
+    
+    .results-table td {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        border-bottom: none;
+        text-align: left !important;
+    }
+
+    .results-table td:nth-child(1) { grid-area: date; }
+    .results-table td:nth-child(2) { 
+        grid-area: amount; 
+        align-items: flex-end; 
+    }
+    .results-table td:nth-child(3) { grid-area: concept; }
+    .results-table td:nth-child(4) { grid-area: split; }
+    .results-table td:nth-child(5) { grid-area: cat; }
+    .results-table td:nth-child(6) { grid-area: subcat; }
+    
+    .results-table td::before {
+        content: attr(data-label);
+        font-size: 9px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+    
+    .results-table .remark-cell {
+        max-width: 100% !important;
+        white-space: normal;
+    }
+    
+    .split-controls {
+        width: 100%;
+        margin-top: 0;
+    }
+    
+    .split-btn {
+        padding: 8px 4px;
+    }
+    
+    .custom-amounts {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 6px;
+    }
+    
+    .amount-input-group {
+        flex: 1;
+        justify-content: space-between;
+    }
+    
+    .amount-input-group:first-child {
+        margin-right: 8px;
+    }
+    
+    .inline-input, .inline-select {
+        width: 100%;
+        margin-top: 0;
+        padding: 8px 10px;
     }
 }

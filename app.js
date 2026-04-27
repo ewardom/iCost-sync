@@ -24,6 +24,11 @@ const state = {
     missingA: [],      // transformed records A needs to add
     missingB: [],      // transformed records B needs to add
     matched: [],
+    
+    // Splitter state
+    splitterOwner: 'A',
+    splitterData: [], // parsed PDF data
+    categories: [], // Shared extracted categories for dropdowns
 };
 
 // ---- CSV Parsing ----
@@ -737,4 +742,325 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('#btn-reset').addEventListener('click', () => location.reload());
+
+    // ---- Splitter Logic ----
+
+    // Navigation
+    $$('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            $$('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const viewId = btn.dataset.view;
+            $$('.view-section').forEach(v => v.classList.add('hidden'));
+            $(`#view-${viewId}`).classList.remove('hidden');
+        });
+    });
+
+    // PDF Upload
+    const dropzonePdf = $('#dropzone-pdf');
+    const filePdf = $('#file-pdf');
+    const browsePdf = $('#browse-pdf');
+
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropzonePdf.addEventListener(evt, e => { e.preventDefault(); dropzonePdf.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropzonePdf.addEventListener(evt, e => { e.preventDefault(); dropzonePdf.classList.remove('dragover'); });
+    });
+
+    dropzonePdf.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        if (file) handlePdfFile(file);
+    });
+    browsePdf.addEventListener('click', e => {
+        e.stopPropagation();
+        filePdf.click();
+    });
+    filePdf.addEventListener('change', () => {
+        if (filePdf.files.length) handlePdfFile(filePdf.files[0]);
+    });
+
+    async function handlePdfFile(file) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            alert("Por favor, sube un archivo PDF.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const dropContent = dropzonePdf.querySelector('.drop-content');
+        const dropLoading = dropzonePdf.querySelector('.drop-loading');
+        const dropSuccess = dropzonePdf.querySelector('.drop-success');
+
+        dropContent.classList.add('hidden');
+        dropSuccess.classList.add('hidden');
+        dropLoading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/parse-pdf', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("Error en el servidor al procesar el PDF");
+            
+            const json = await response.json();
+            
+            if (!json.transactions || json.transactions.length === 0) {
+                throw new Error("No se encontraron gastos en el archivo.");
+            }
+
+            // Add split state to transactions
+            state.splitterData = json.transactions.map(t => ({
+                ...t,
+                splitType: '5050', // '5050', 'mine', 'hers', 'manual'
+                amountMine: t.amount / 2,
+                amountHers: t.amount / 2,
+                category: 'Comida', // Default
+                subcategory: ''
+            }));
+
+            dropLoading.classList.add('hidden');
+            dropSuccess.classList.remove('hidden');
+            dropSuccess.querySelector('.file-name').textContent = file.name;
+            dropSuccess.querySelector('.file-rows').textContent = `${state.splitterData.length} gastos extraídos`;
+            
+            // Populate categories if we have data from sync step, else fallback
+            if (state.dataA) {
+                state.categories = getCategories(state.dataA);
+            } else if (state.dataB) {
+                state.categories = getCategories(state.dataB);
+            }
+
+            renderSplitterTable();
+            
+            $('#splitter-step-upload').classList.add('hidden');
+            $('#splitter-step-results').classList.remove('hidden');
+
+        } catch (err) {
+            alert("Error: " + err.message);
+            dropLoading.classList.add('hidden');
+            dropContent.classList.remove('hidden');
+        }
+    }
+
+    function renderSplitterTable() {
+        const tbody = $('#table-splitter tbody');
+        tbody.innerHTML = '';
+
+        state.splitterData.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            
+            // Date cell
+            const tdDate = document.createElement('td');
+            tdDate.setAttribute('data-label', 'FECHA');
+            tdDate.textContent = item.date;
+            
+            // Amount cell
+            const tdAmount = document.createElement('td');
+            tdAmount.setAttribute('data-label', 'MONTO');
+            tdAmount.className = 'amount-cell';
+            tdAmount.textContent = `$${item.amount.toFixed(2)}`;
+            
+            // Concept cell
+            const tdConcept = document.createElement('td');
+            tdConcept.setAttribute('data-label', 'CONCEPTO');
+            tdConcept.className = 'remark-cell';
+            tdConcept.title = item.description;
+            tdConcept.textContent = item.description;
+            
+            // Split Control cell
+            const tdSplit = document.createElement('td');
+            tdSplit.setAttribute('data-label', 'DIVISIÓN');
+            tdSplit.innerHTML = `
+                <div class="split-controls">
+                    <button class="split-btn ${item.splitType === '5050' ? 'active' : ''}" data-idx="${index}" data-type="5050">50/50</button>
+                    <button class="split-btn ${item.splitType === 'mine' ? 'active' : ''}" data-idx="${index}" data-type="mine">Mío</button>
+                    <button class="split-btn ${item.splitType === 'hers' ? 'active' : ''}" data-idx="${index}" data-type="hers">Ella</button>
+                    <button class="split-btn ${item.splitType === 'manual' ? 'active' : ''}" data-idx="${index}" data-type="manual">Manual</button>
+                </div>
+                <div class="custom-amounts ${item.splitType === 'manual' ? '' : 'hidden'}" id="custom-amt-${index}">
+                    <div class="amount-input-group">
+                        <span>Mío $</span>
+                        <input type="number" step="0.01" class="amt-mine" data-idx="${index}" value="${item.amountMine.toFixed(2)}">
+                    </div>
+                    <div class="amount-input-group">
+                        <span>Ella $</span>
+                        <input type="number" step="0.01" class="amt-hers" data-idx="${index}" value="${item.amountHers.toFixed(2)}">
+                    </div>
+                </div>
+            `;
+            
+            // Attach split button listeners
+            tdSplit.querySelectorAll('.split-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.dataset.type;
+                    item.splitType = type;
+                    if (type === '5050') { item.amountMine = item.amount / 2; item.amountHers = item.amount / 2; }
+                    else if (type === 'mine') { item.amountMine = item.amount; item.amountHers = 0; }
+                    else if (type === 'hers') { item.amountMine = 0; item.amountHers = item.amount; }
+                    
+                    if (type === 'manual') {
+                        tdSplit.querySelector('.custom-amounts').classList.remove('hidden');
+                    } else {
+                        tdSplit.querySelector('.custom-amounts').classList.add('hidden');
+                        // Update inputs
+                        tdSplit.querySelector('.amt-mine').value = item.amountMine.toFixed(2);
+                        tdSplit.querySelector('.amt-hers').value = item.amountHers.toFixed(2);
+                    }
+                    
+                    tdSplit.querySelectorAll('.split-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+            
+            // Attach manual input listeners
+            tdSplit.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const isMine = e.target.classList.contains('amt-mine');
+                    let val = parseFloat(e.target.value) || 0;
+                    
+                    if (isMine) {
+                        item.amountMine = val;
+                        item.amountHers = Math.max(0, item.amount - val);
+                        tdSplit.querySelector('.amt-hers').value = item.amountHers.toFixed(2);
+                    } else {
+                        item.amountHers = val;
+                        item.amountMine = Math.max(0, item.amount - val);
+                        tdSplit.querySelector('.amt-mine').value = item.amountMine.toFixed(2);
+                    }
+                });
+            });
+            
+            // Primary Category
+            const tdCat = document.createElement('td');
+            tdCat.setAttribute('data-label', 'CATEGORÍA');
+            const inpCat = document.createElement('input');
+            inpCat.type = 'text';
+            inpCat.className = 'inline-input';
+            inpCat.value = item.category;
+            inpCat.placeholder = "Escribe...";
+            
+            const listCatId = `cat-list-${index}`;
+            inpCat.setAttribute('list', listCatId);
+            const dlCat = document.createElement('datalist');
+            dlCat.id = listCatId;
+
+            let categories = state.categories.length ? state.categories : [
+                { primary: 'Comida', secondaries: [] },
+                { primary: 'Compras', secondaries: [] },
+                { primary: 'Transporte', secondaries: [] },
+                { primary: 'Vida', secondaries: [] }
+            ];
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.primary;
+                dlCat.appendChild(opt);
+            });
+            
+            // Subcategory
+            const tdSub = document.createElement('td');
+            tdSub.setAttribute('data-label', 'SUBCATEGORÍA');
+            const inpSub = document.createElement('input');
+            inpSub.type = 'text';
+            inpSub.className = 'inline-input';
+            inpSub.value = item.subcategory;
+            inpSub.placeholder = "Opcional...";
+            
+            const listSubId = `subcat-list-${index}`;
+            inpSub.setAttribute('list', listSubId);
+            const dlSub = document.createElement('datalist');
+            dlSub.id = listSubId;
+            
+            const updateSubcategories = (primaryCat) => {
+                dlSub.innerHTML = '';
+                const catObj = categories.find(c => c.primary === primaryCat);
+                if (catObj && catObj.secondaries.length > 0) {
+                    catObj.secondaries.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        dlSub.appendChild(opt);
+                    });
+                }
+            };
+            
+            inpCat.addEventListener('change', e => {
+                item.category = e.target.value.trim();
+                // Only reset subcategory if primary changed
+                updateSubcategories(item.category);
+            });
+            inpSub.addEventListener('change', e => {
+                item.subcategory = e.target.value.trim();
+            });
+            
+            updateSubcategories(item.category);
+            tdCat.appendChild(inpCat);
+            tdCat.appendChild(dlCat);
+            tdSub.appendChild(inpSub);
+            tdSub.appendChild(dlSub);
+            
+            tr.appendChild(tdDate);
+            tr.appendChild(tdAmount);
+            tr.appendChild(tdConcept);
+            tr.appendChild(tdSplit);
+            tr.appendChild(tdCat);
+            tr.appendChild(tdSub);
+            
+            tbody.appendChild(tr);
+        });
+    }
+
+    $('#export-split').addEventListener('click', () => {
+        state.splitterOwner = $('#splitter-owner').value;
+        
+        if (!state.accountAforB && state.splitterOwner === 'A') {
+            const userInp = prompt("Ingresa el nombre exacto de la cuenta que usas en iCost para representar a tu novia:");
+            if (!userInp) return;
+            state.accountAforB = userInp.trim();
+        }
+        
+        const lines = [];
+        lines.push(['日期', '类型', '金额', '一级分类', '二级分类', '账户1', '账户2', '备注', '货币', '标签'].join(','));
+        
+        state.splitterData.forEach(item => {
+            const dateStr = item.date + ' 12:00:00';
+            
+            if (state.splitterOwner === 'A') {
+                if (item.amountMine > 0) {
+                    lines.push([
+                        dateStr, '支出', item.amountMine.toFixed(2),
+                        csvEscape(item.category), csvEscape(item.subcategory),
+                        '', '', csvEscape(item.description), '', ''
+                    ].join(','));
+                }
+                if (item.amountHers > 0) {
+                    lines.push([
+                        dateStr, '转账', item.amountHers.toFixed(2),
+                        '', '', '', csvEscape(state.accountAforB),
+                        csvEscape(item.description), '', ''
+                    ].join(','));
+                }
+            } else {
+                if (item.amountMine > 0) {
+                    lines.push([
+                        dateStr, '支出', item.amountMine.toFixed(2),
+                        csvEscape(item.category), csvEscape(item.subcategory),
+                        csvEscape(state.accountAforB), '', csvEscape(item.description), '', ''
+                    ].join(','));
+                }
+            }
+        });
+
+        const csvContent = lines.join('\n');
+        downloadCSV(csvContent, 'gastos_divididos_banorte.csv');
+    });
+
+    $('#btn-reset-splitter').addEventListener('click', () => {
+        state.splitterData = [];
+        $('#splitter-step-results').classList.add('hidden');
+        $('#splitter-step-upload').classList.remove('hidden');
+        $('#dropzone-pdf').querySelector('.drop-success').classList.add('hidden');
+        $('#dropzone-pdf').querySelector('.drop-content').classList.remove('hidden');
+    });
 });

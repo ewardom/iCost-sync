@@ -23,6 +23,19 @@
             <p class="subtitle">Encuentra los gastos que te faltan por registrar</p>
         </header>
 
+        <!-- Main Navigation -->
+        <nav class="main-nav">
+            <button class="nav-btn active" data-view="sync">
+                <span>⇄</span> Comparador iCost
+            </button>
+            <button class="nav-btn" data-view="splitter">
+                <span>✂️</span> Divisor Banorte
+            </button>
+        </nav>
+
+        <!-- VIEW: SYNC -->
+        <div id="view-sync" class="view-section active">
+
         <!-- Step 1: Upload -->
         <section id="step-upload" class="step active">
             <div class="step-header">
@@ -221,6 +234,85 @@
                 ← Volver a empezar
             </button>
         </section>
+        </div> <!-- End view-sync -->
+
+        <!-- VIEW: SPLITTER -->
+        <div id="view-splitter" class="view-section hidden">
+            <!-- Step 1: Upload PDF -->
+            <section id="splitter-step-upload" class="step active">
+                <div class="step-header">
+                    <span class="step-number">1</span>
+                    <h2>Sube tu Estado de Cuenta</h2>
+                </div>
+                <div class="upload-card" style="max-width: 600px; margin: 0 auto 32px;">
+                    <div class="upload-avatar" style="background: linear-gradient(135deg, #ef4444, #dc2626);">🏦</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">Sube el PDF de tu tarjeta de crédito Banorte</p>
+                    <div class="drop-zone" id="dropzone-pdf">
+                        <input type="file" id="file-pdf" accept="application/pdf" hidden>
+                        <div class="drop-content">
+                            <span class="drop-icon">📄</span>
+                            <p>Arrastra tu PDF aquí</p>
+                            <button class="btn-browse" id="browse-pdf">Seleccionar archivo</button>
+                        </div>
+                        <div class="drop-loading hidden">
+                            <span class="drop-icon" style="animation: spin 1s linear infinite;">⏳</span>
+                            <p>Extrayendo gastos...</p>
+                        </div>
+                        <div class="drop-success hidden">
+                            <span class="success-icon">✓</span>
+                            <p class="file-name"></p>
+                            <p class="file-rows"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-card config-full" style="max-width: 600px; margin: 0 auto;">
+                    <div class="filter-header">
+                        <h3>👤 ¿Quién es el titular de la tarjeta?</h3>
+                        <p>Para saber a quién asignarle las deudas</p>
+                    </div>
+                    <select id="splitter-owner" class="account-select" style="max-width: 200px;">
+                        <option value="A">Yo (Persona A)</option>
+                        <option value="B">Ella (Persona B)</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Step 2: Split Results -->
+            <section id="splitter-step-results" class="step hidden">
+                <div class="step-header">
+                    <span class="step-number">2</span>
+                    <h2>Divide los gastos</h2>
+                </div>
+                
+                <div class="panel-actions" style="justify-content: flex-end;">
+                    <button class="btn-export" id="export-split">
+                        📥 Exportar CSV
+                    </button>
+                </div>
+
+                <div class="results-table-wrap">
+                    <table class="results-table" id="table-splitter">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Concepto</th>
+                                <th>División</th>
+                                <th>Categoría Primaria</th>
+                                <th>Subcategoría</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 24px; text-align: center;">
+                    <button class="btn-secondary" id="btn-reset-splitter">← Empezar de nuevo</button>
+                </div>
+            </section>
+        </div> <!-- End view-splitter -->
+
     </div>
 
     <script src="app.js"></script>
