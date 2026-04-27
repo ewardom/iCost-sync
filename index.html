@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iCost Sync — Comparador de Gastos</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">⇄</span>
+                <h1>iCost <span class="accent">Sync</span></h1>
+            </div>
+            <p class="subtitle">Encuentra los gastos que te faltan por registrar</p>
+        </header>
+
+        <!-- Step 1: Upload -->
+        <section id="step-upload" class="step active">
+            <div class="step-header">
+                <span class="step-number">1</span>
+                <h2>Sube los archivos CSV de iCost</h2>
+            </div>
+
+            <div class="upload-grid">
+                <div class="upload-card" id="drop-a">
+                    <div class="upload-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">👤</div>
+                    <input type="text" id="name-a" class="name-input" placeholder="Tu nombre" value="">
+                    <div class="drop-zone" id="dropzone-a">
+                        <input type="file" id="file-a" accept=".csv,.xlsx,.xls" hidden>
+                        <div class="drop-content">
+                            <span class="drop-icon">📄</span>
+                            <p>Arrastra tu archivo aquí (.xlsx / .csv)</p>
+                            <button class="btn-browse" id="browse-a">Seleccionar archivo</button>
+                        </div>
+                        <div class="drop-success hidden">
+                            <span class="success-icon">✓</span>
+                            <p class="file-name"></p>
+                            <p class="file-rows"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-divider">
+                    <span>VS</span>
+                </div>
+
+                <div class="upload-card" id="drop-b">
+                    <div class="upload-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">👤</div>
+                    <input type="text" id="name-b" class="name-input" placeholder="Nombre de tu pareja" value="">
+                    <div class="drop-zone" id="dropzone-b">
+                        <input type="file" id="file-b" accept=".csv,.xlsx,.xls" hidden>
+                        <div class="drop-content">
+                            <span class="drop-icon">📄</span>
+                            <p>Arrastra su archivo aquí (.xlsx / .csv)</p>
+                            <button class="btn-browse" id="browse-b">Seleccionar archivo</button>
+                        </div>
+                        <div class="drop-success hidden">
+                            <span class="success-icon">✓</span>
+                            <p class="file-name"></p>
+                            <p class="file-rows"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Configure accounts -->
+        <section id="step-config" class="step hidden">
+            <div class="step-header">
+                <span class="step-number">2</span>
+                <h2>Configura las cuentas</h2>
+            </div>
+            <p class="step-desc">Selecciona la cuenta que cada persona usa para el otro. Se buscarán gastos desde esa
+                cuenta y transferencias hacia esa cuenta.</p>
+
+            <div class="config-grid">
+                <div class="config-card config-a">
+                    <h3>En los datos de <span class="person-a-name">Persona A</span>:</h3>
+                    <p>¿Con qué cuenta registra los gastos de <span class="person-b-name">Persona B</span>?</p>
+                    <select id="account-a-for-b" class="account-select">
+                        <option value="">— Selecciona cuenta —</option>
+                    </select>
+                    <div class="account-preview hidden" id="preview-a">
+                        <span class="preview-count">0</span> movimientos encontrados (gastos + transferencias)
+                    </div>
+                </div>
+
+                <div class="config-card config-b">
+                    <h3>En los datos de <span class="person-b-name">Persona B</span>:</h3>
+                    <p>¿Con qué cuenta registra los gastos de <span class="person-a-name">Persona A</span>?</p>
+                    <select id="account-b-for-a" class="account-select">
+                        <option value="">— Selecciona cuenta —</option>
+                    </select>
+                    <div class="account-preview hidden" id="preview-b">
+                        <span class="preview-count">0</span> movimientos encontrados (gastos + transferencias)
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card config-full">
+                <div class="filter-header">
+                    <h3>📅 Filtro de fecha</h3>
+                    <p>Ignorar movimientos anteriores a:</p>
+                </div>
+                <input type="date" id="filter-date" class="date-input" value="2026-04-06">
+            </div>
+
+            <button class="btn-primary" id="btn-compare" disabled>
+                <span>🔍</span> Comparar gastos
+            </button>
+        </section>
+
+        <!-- Step 3: Results -->
+        <section id="step-results" class="step hidden">
+            <div class="step-header">
+                <span class="step-number">3</span>
+                <h2>Resultados</h2>
+            </div>
+
+            <div class="results-tabs">
+                <button class="tab active" data-tab="missing-a">
+                    Le faltan a <span class="person-a-name">A</span>
+                    <span class="tab-badge" id="badge-a">0</span>
+                </button>
+                <button class="tab" data-tab="missing-b">
+                    Le faltan a <span class="person-b-name">B</span>
+                    <span class="tab-badge" id="badge-b">0</span>
+                </button>
+                <button class="tab" data-tab="matched">
+                    Coincidencias
+                    <span class="tab-badge tab-badge-green" id="badge-matched">0</span>
+                </button>
+            </div>
+
+            <div class="results-panel" id="panel-missing-a">
+                <div class="panel-actions">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="select-all-a" checked> Seleccionar todos
+                    </label>
+                    <button class="btn-export" id="export-a" disabled>
+                        📥 Exportar CSV para <span class="person-a-name">A</span>
+                    </button>
+                </div>
+                <div class="results-table-wrap">
+                    <table class="results-table" id="table-missing-a">
+                        <thead>
+                            <tr>
+                                <th class="th-check"><input type="checkbox" checked></th>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Tipo para ti</th>
+                                <th>Categoría / Cuenta</th>
+                                <th>Subcategoría</th>
+                                <th>Nota</th>
+                                <th>Movimiento original</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="empty-message hidden">🎉 ¡No hay gastos faltantes!</p>
+            </div>
+
+            <div class="results-panel hidden" id="panel-missing-b">
+                <div class="panel-actions">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="select-all-b" checked> Seleccionar todos
+                    </label>
+                    <button class="btn-export" id="export-b" disabled>
+                        📥 Exportar CSV para <span class="person-b-name">B</span>
+                    </button>
+                </div>
+                <div class="results-table-wrap">
+                    <table class="results-table" id="table-missing-b">
+                        <thead>
+                            <tr>
+                                <th class="th-check"><input type="checkbox" checked></th>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Tipo para ti</th>
+                                <th>Categoría / Cuenta</th>
+                                <th>Subcategoría</th>
+                                <th>Nota</th>
+                                <th>Movimiento original</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="empty-message hidden">🎉 ¡No hay gastos faltantes!</p>
+            </div>
+
+            <div class="results-panel hidden" id="panel-matched">
+                <div class="results-table-wrap">
+                    <table class="results-table" id="table-matched">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Categoría</th>
+                                <th>Nota (origen)</th>
+                                <th>Nota (destino)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p class="empty-message hidden">No se encontraron coincidencias</p>
+            </div>
+
+            <button class="btn-secondary" id="btn-reset">
+                ← Volver a empezar
+            </button>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

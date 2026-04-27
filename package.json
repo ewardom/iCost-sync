@@ -1,0 +1,8 @@
+{
+  "name": "icost-sync",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx -y serve . -p 3000 -s"
+  }
+}
