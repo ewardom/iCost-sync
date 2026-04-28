@@ -30,13 +30,21 @@ def parse_banorte_date(date_str):
         return f"{y}-{m_num}-{d.zfill(2)}"
     return date_str
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "API is running"}
+
+@app.get("/api/main")
+def read_api_main():
+    return {"status": "ok", "message": "API is running on /api/main"}
+
 @app.post("/parse-pdf")
 async def parse_pdf(file: UploadFile = File(...)):
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="El archivo debe ser un PDF")
         
     transactions = []
-    temp_file = f"temp_{file.filename}"
+    temp_file = f"/tmp/temp_{file.filename}"
     
     try:
         # Guardar archivo temporal
