@@ -827,10 +827,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dropSuccess.querySelector('.file-rows').textContent = `${state.splitterData.length} gastos extraídos`;
             
             // Populate categories if we have data from sync step, else fallback
-            if (state.dataA) {
-                state.categories = getCategories(state.dataA);
-            } else if (state.dataB) {
-                state.categories = getCategories(state.dataB);
+            let rawCats = null;
+            if (state.dataA) rawCats = getCategories(state.dataA);
+            else if (state.dataB) rawCats = getCategories(state.dataB);
+
+            if (rawCats) {
+                state.categories = rawCats.primaries.map(p => ({
+                    primary: p,
+                    secondaries: rawCats.secondaryMap[p] || []
+                }));
             }
 
             renderSplitterTable();
