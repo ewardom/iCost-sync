@@ -990,6 +990,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
             
+            // Populate subcategories for the default primary category immediately
+            updateSubcategories(item.category);
+            
             inpCat.addEventListener('change', e => {
                 item.category = e.target.value.trim();
                 // Only reset subcategory if primary changed
