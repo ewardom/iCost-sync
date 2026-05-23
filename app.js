@@ -262,7 +262,12 @@ function compareData() {
 
 // ---- Generate iCost import CSV ----
 function generateImportCSV(missingItems, otherPersonAccount) {
-    const headers = ['Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag'];
+    const headers = [
+        'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
+        'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
+        'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
+        'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
+    ];
     const lines = [headers.join(',')];
 
     missingItems.forEach(item => {
@@ -277,30 +282,52 @@ function generateImportCSV(missingItems, otherPersonAccount) {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
             lines.push([
-                date,
-                'Expense',
-                amount,
-                csvEscape(category),
-                csvEscape(subcategory),
-                csvEscape(otherPersonAccount),
-                '',
-                csvEscape(remark),
-                currency,
-                tag
+                date,                              // Date
+                'Expense',                          // Type
+                amount,                             // Amount
+                csvEscape(category),                // First-Level Category
+                csvEscape(subcategory),             // Second-Level Category
+                csvEscape(otherPersonAccount),      // Account 1
+                '',                                 // Account 2
+                csvEscape(remark),                  // Remark
+                currency,                           // Currency
+                tag,                                // Tag
+                '',                                 // Ledger
+                '',                                 // Address
+                '',                                 // Refund
+                '',                                 // Discount
+                '',                                 // Fee
+                '',                                 // Image 1
+                '',                                 // Image 2
+                '',                                 // Image 3
+                '',                                 // Attachment 1
+                '',                                 // Attachment 2
+                ''                                  // Attachment 3
             ].join(','));
         } else {
             const sourceAccount = item.selectedAccount || '';
             lines.push([
-                date,
-                'Transfer',
-                amount,
-                '',
-                '',
-                csvEscape(sourceAccount),
-                csvEscape(otherPersonAccount),
-                csvEscape(remark),
-                currency,
-                tag
+                date,                              // Date
+                'Transfer',                         // Type
+                amount,                             // Amount
+                '',                                 // First-Level Category
+                '',                                 // Second-Level Category
+                csvEscape(sourceAccount),           // Account 1
+                csvEscape(otherPersonAccount),      // Account 2
+                csvEscape(remark),                  // Remark
+                currency,                           // Currency
+                tag,                                // Tag
+                '',                                 // Ledger
+                '',                                 // Address
+                '',                                 // Refund
+                '',                                 // Discount
+                '',                                 // Fee
+                '',                                 // Image 1
+                '',                                 // Image 2
+                '',                                 // Image 3
+                '',                                 // Attachment 1
+                '',                                 // Attachment 2
+                ''                                  // Attachment 3
             ].join(','));
         }
     });
@@ -1039,7 +1066,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const lines = [];
-        lines.push(['Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag'].join(','));
+        const headers = [
+            'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
+            'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
+            'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
+            'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
+        ];
+        lines.push(headers.join(','));
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
@@ -1049,16 +1082,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (amount > 0) {
                 exportedCount++;
                 lines.push([
-                    dateStr,
-                    'Expense',
-                    amount.toFixed(2),
-                    '',
-                    '',
-                    csvEscape(cardName),
-                    '',
-                    csvEscape(item.remark || ""),
-                    '',
-                    ''
+                    dateStr,                            // Date
+                    'Expense',                          // Type
+                    amount.toFixed(2),                  // Amount
+                    '',                                 // First-Level Category
+                    '',                                 // Second-Level Category
+                    csvEscape(cardName),                // Account 1
+                    '',                                 // Account 2
+                    csvEscape(item.remark || ""),       // Remark
+                    '',                                 // Currency
+                    '',                                 // Tag
+                    '',                                 // Ledger
+                    '',                                 // Address
+                    '',                                 // Refund
+                    '',                                 // Discount
+                    '',                                 // Fee
+                    '',                                 // Image 1
+                    '',                                 // Image 2
+                    '',                                 // Image 3
+                    '',                                 // Attachment 1
+                    '',                                 // Attachment 2
+                    ''                                  // Attachment 3
                 ].join(','));
             }
         });
