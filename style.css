@@ -3,30 +3,30 @@
    ============================================================ */
 
 :root {
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #12121a;
-    --bg-card: #1a1a2e;
-    --bg-card-hover: #222240;
-    --bg-input: #16162a;
-    --border: #2a2a4a;
-    --border-hover: #4a4a7a;
-    --text-primary: #e8e8f0;
-    --text-secondary: #9898b8;
-    --text-muted: #6868a0;
-    --accent-a: #6366f1;
-    --accent-a-glow: rgba(99, 102, 241, 0.3);
-    --accent-b: #ec4899;
-    --accent-b-glow: rgba(236, 72, 153, 0.3);
-    --accent-green: #10b981;
-    --accent-green-glow: rgba(16, 185, 129, 0.2);
-    --accent-amber: #f59e0b;
+    --bg-primary: #030c0a;
+    --bg-secondary: #061411;
+    --bg-card: #0b211d;
+    --bg-card-hover: #112d28;
+    --bg-input: #061a16;
+    --border: #133830;
+    --border-hover: #205c4f;
+    --text-primary: #f3f7f6;
+    --text-secondary: #8cb0a8;
+    --text-muted: #507870;
+    --accent-a: #00df81;
+    --accent-a-glow: rgba(0, 223, 129, 0.25);
+    --accent-b: #2cc295;
+    --accent-b-glow: rgba(44, 194, 149, 0.2);
+    --accent-green: #00df81;
+    --accent-green-glow: rgba(0, 223, 129, 0.15);
+    --accent-amber: #ffb020;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 20px;
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -864,6 +864,63 @@ body::before {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ---- Splitter Summary Card (Dashboard) ---- */
+.splitter-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-md);
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.4s ease;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+}
+
+.summary-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+}
+
+.summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.summary-value.accent-a-text {
+    color: var(--accent-a);
+    text-shadow: 0 0 12px var(--accent-a-glow);
+}
+
+.summary-value.accent-b-text {
+    color: var(--accent-b);
+    text-shadow: 0 0 12px var(--accent-b-glow);
+}
+
+.summary-divider {
+    width: 1px;
+    height: 48px;
+    background: var(--border);
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 700px) {
     .upload-grid {
@@ -901,20 +958,40 @@ body::before {
         display: none;
     }
     
-    .results-table tr {
+    /* Comparer Tables Card View (A & B) */
+    #table-missing-a tr, 
+    #table-missing-b tr {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: auto 1fr auto;
         grid-template-areas: 
-            "date amount"
-            "concept concept"
-            "split split"
-            "cat subcat";
-        gap: 10px 12px;
-        margin-bottom: 16px;
-        border: 1px solid var(--border);
+            "check date amount"
+            "check type remark"
+            "cat cat subcat";
+        gap: 8px 12px;
+        margin-bottom: 12px;
+        border: none !important; /* Quitar borde tosco */
         border-radius: var(--radius-md);
-        background: var(--bg-card);
-        padding: 14px;
+        background: linear-gradient(135deg, var(--bg-card), rgba(11, 33, 29, 0.4));
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Splitter Table Card View (Banorte) */
+    #table-splitter tr {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: 
+            "check date amount"
+            "check concept concept"
+            "split split split"
+            "remark remark remark";
+        gap: 8px 12px;
+        margin-bottom: 12px;
+        border: none !important; /* Quitar borde tosco */
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--bg-card), rgba(11, 33, 29, 0.4));
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .results-table td {
@@ -925,24 +1002,27 @@ body::before {
         text-align: left !important;
     }
 
-    .results-table td:nth-child(1) { grid-area: date; }
-    .results-table td:nth-child(2) { 
-        grid-area: amount; 
-        align-items: flex-end; 
-    }
-    .results-table td:nth-child(3) { grid-area: concept; }
-    .results-table td:nth-child(4) { grid-area: split; }
-    .results-table td:nth-child(5) { grid-area: cat; }
-    .results-table td:nth-child(6) { grid-area: subcat; }
+    /* Mapeo para Comparer Tables */
+    #table-missing-a td:nth-child(1), #table-missing-b td:nth-child(1) { grid-area: check; align-self: center; justify-self: center; }
+    #table-missing-a td:nth-child(2), #table-missing-b td:nth-child(2) { grid-area: date; }
+    #table-missing-a td:nth-child(3), #table-missing-b td:nth-child(3) { grid-area: amount; align-items: flex-end; }
+    #table-missing-a td:nth-child(4), #table-missing-b td:nth-child(4) { grid-area: type; }
+    #table-missing-a td:nth-child(5), #table-missing-b td:nth-child(5) { grid-area: cat; }
+    #table-missing-a td:nth-child(6), #table-missing-b td:nth-child(6) { grid-area: subcat; }
+    #table-missing-a td:nth-child(7), #table-missing-b td:nth-child(7) { grid-area: remark; }
+    #table-missing-a td:nth-child(8), #table-missing-b td:nth-child(8) { display: none !important; } /* Ocultar movimiento original en móvil */
+
+    /* Mapeo para Splitter Table */
+    #table-splitter td:nth-child(1) { grid-area: check; align-self: center; justify-self: center; }
+    #table-splitter td:nth-child(2) { grid-area: date; }
+    #table-splitter td:nth-child(3) { grid-area: amount; align-items: flex-end; }
+    #table-splitter td:nth-child(4) { grid-area: concept; font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
+    #table-splitter td:nth-child(5) { grid-area: split; }
+    #table-splitter td:nth-child(6) { grid-area: remark; }
     
+    /* Ocultar etiquetas ::before repetitivas y molestas */
     .results-table td::before {
-        content: attr(data-label);
-        font-size: 9px;
-        text-transform: uppercase;
-        font-weight: 700;
-        color: var(--text-muted);
-        margin-bottom: 4px;
-        letter-spacing: 0.5px;
+        display: none !important;
     }
     
     .results-table .remark-cell {
@@ -956,7 +1036,8 @@ body::before {
     }
     
     .split-btn {
-        padding: 8px 4px;
+        padding: 6px 4px;
+        font-size: 10px;
     }
     
     .custom-amounts {
@@ -977,6 +1058,7 @@ body::before {
     .inline-input, .inline-select {
         width: 100%;
         margin-top: 0;
-        padding: 8px 10px;
+        padding: 6px 10px;
+        font-size: 11px;
     }
 }

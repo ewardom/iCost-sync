@@ -947,6 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     tdSplit.querySelectorAll('.split-btn').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
+                    updateSplitterSummary();
                 });
             });
             
@@ -965,6 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.amountMine = Math.max(0, item.amount - val);
                         tdSplit.querySelector('.amt-mine').value = item.amountMine.toFixed(2);
                     }
+                    updateSplitterSummary();
                 });
             });
             
@@ -990,6 +992,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tbody.appendChild(tr);
         });
+        updateSplitterSummary();
+    }
+
+    function updateSplitterSummary() {
+        // Only sum selected/checked items
+        const selectedItems = state.splitterData.filter(t => t.selected);
+        
+        const total = selectedItems.reduce((acc, t) => acc + t.amount, 0);
+        const mine = selectedItems.reduce((acc, t) => acc + t.amountMine, 0);
+        const hers = selectedItems.reduce((acc, t) => acc + t.amountHers, 0);
+        
+        const totalEl = $('#summary-total');
+        const mineEl = $('#summary-mine');
+        const hersEl = $('#summary-hers');
+        
+        if (totalEl) totalEl.textContent = `$${total.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        if (mineEl) mineEl.textContent = `$${mine.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        if (hersEl) hersEl.textContent = `$${hers.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     function updateSplitterSelectAllState() {
@@ -1001,6 +1021,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const cbTable = $('#select-all-splitter-table');
         if (cbMain) cbMain.checked = checked;
         if (cbTable) cbTable.checked = checked;
+        
+        updateSplitterSummary();
     }
 
     function exportSplitDataFor(target) {
@@ -1059,6 +1081,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const cbTable = $('#select-all-splitter-table');
         if (cbMain) cbMain.checked = checked;
         if (cbTable) cbTable.checked = checked;
+
+        updateSplitterSummary();
     };
 
     const cbMain = $('#select-all-splitter');
