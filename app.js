@@ -260,15 +260,15 @@ function compareData() {
     state.matched = [...matchedFromA, ...matchedFromB];
 }
 
-// ---- Generate iCost import CSV ----
-function generateImportCSV(missingItems, otherPersonAccount) {
+// ---- Generate iCost import rows ----
+function generateImportRows(missingItems, otherPersonAccount) {
     const headers = [
         'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
         'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
         'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
         'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
     ];
-    const lines = [headers.join(',')];
+    const rows = [headers];
 
     missingItems.forEach(item => {
         const row = item.original;
@@ -281,15 +281,15 @@ function generateImportCSV(missingItems, otherPersonAccount) {
         if (item.debtorType === 'expense') {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
-            lines.push([
+            rows.push([
                 date,                              // Date
                 'Expense',                          // Type
                 amount,                             // Amount
-                csvEscape(category),                // First-Level Category
-                csvEscape(subcategory),             // Second-Level Category
-                csvEscape(otherPersonAccount),      // Account 1
+                category,                           // First-Level Category
+                subcategory,                        // Second-Level Category
+                otherPersonAccount,                 // Account 1
                 '',                                 // Account 2
-                csvEscape(remark),                  // Remark
+                remark,                             // Remark
                 currency,                           // Currency
                 tag,                                // Tag
                 '',                                 // Ledger
@@ -303,18 +303,18 @@ function generateImportCSV(missingItems, otherPersonAccount) {
                 '',                                 // Attachment 1
                 '',                                 // Attachment 2
                 ''                                  // Attachment 3
-            ].join(','));
+            ]);
         } else {
             const sourceAccount = item.selectedAccount || '';
-            lines.push([
+            rows.push([
                 date,                              // Date
                 'Transfer',                         // Type
                 amount,                             // Amount
                 '',                                 // First-Level Category
                 '',                                 // Second-Level Category
-                csvEscape(sourceAccount),           // Account 1
-                csvEscape(otherPersonAccount),      // Account 2
-                csvEscape(remark),                  // Remark
+                sourceAccount,                      // Account 1
+                otherPersonAccount,                 // Account 2
+                remark,                             // Remark
                 currency,                           // Currency
                 tag,                                // Tag
                 '',                                 // Ledger
@@ -328,11 +328,11 @@ function generateImportCSV(missingItems, otherPersonAccount) {
                 '',                                 // Attachment 1
                 '',                                 // Attachment 2
                 ''                                  // Attachment 3
-            ].join(','));
+            ]);
         }
     });
 
-    return '\uFEFF' + lines.join('\n');
+    return rows;
 }
 
 function csvEscape(str) {
@@ -634,6 +634,13 @@ function downloadCSV(content, filename) {
     }, 100);
 }
 
+function downloadXLSX(rows, filename) {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, "iCost");
+    XLSX.writeFile(wb, filename);
+}
+
 // ---- File handling ----
 function setupDropZone(dropzoneId, fileInputId, browseButtonId, onLoaded) {
     const zone = $(`#${dropzoneId}`);
@@ -757,15 +764,15 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#export-a').addEventListener('click', () => {
         const indices = getSelectedIndices('table-missing-a');
         const selected = indices.map(i => state.missingA[i]);
-        const csv = generateImportCSV(selected, state.accountAforB);
-        downloadCSV(csv, `faltantes_${state.nameA}.csv`);
+        const rows = generateImportRows(selected, state.accountAforB);
+        downloadXLSX(rows, `faltantes_${state.nameA}.xlsx`);
     });
 
     $('#export-b').addEventListener('click', () => {
         const indices = getSelectedIndices('table-missing-b');
         const selected = indices.map(i => state.missingB[i]);
-        const csv = generateImportCSV(selected, state.accountBforA);
-        downloadCSV(csv, `faltantes_${state.nameB}.csv`);
+        const rows = generateImportRows(selected, state.accountBforA);
+        downloadXLSX(rows, `faltantes_${state.nameB}.xlsx`);
     });
 
     $('#btn-reset').addEventListener('click', () => location.reload());
@@ -1065,14 +1072,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const lines = [];
+        const rows = [];
         const headers = [
             'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
             'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
             'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
             'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
         ];
-        lines.push(headers.join(','));
+        rows.push(headers);
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
@@ -1081,15 +1088,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (amount > 0) {
                 exportedCount++;
-                lines.push([
+                rows.push([
                     dateStr,                            // Date
                     'Expense',                          // Type
-                    amount.toFixed(2),                  // Amount
+                    amount,                             // Amount (as number)
                     '',                                 // First-Level Category
                     '',                                 // Second-Level Category
-                    csvEscape(cardName),                // Account 1
+                    cardName,                           // Account 1
                     '',                                 // Account 2
-                    csvEscape(item.remark || ""),       // Remark
+                    item.remark || "",                  // Remark
                     '',                                 // Currency
                     '',                                 // Tag
                     '',                                 // Ledger
@@ -1103,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     '',                                 // Attachment 1
                     '',                                 // Attachment 2
                     ''                                  // Attachment 3
-                ].join(','));
+                ]);
             }
         });
         
@@ -1112,9 +1119,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const csvContent = '\uFEFF' + lines.join('\n');
-        const filename = target === 'mine' ? 'mis_gastos_banorte.csv' : 'sus_gastos_banorte.csv';
-        downloadCSV(csvContent, filename);
+        const filename = target === 'mine' ? 'mis_gastos_banorte.xlsx' : 'sus_gastos_banorte.xlsx';
+        downloadXLSX(rows, filename);
     }
 
     const selectAllSplitterHandler = e => {
