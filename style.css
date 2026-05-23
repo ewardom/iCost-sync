@@ -625,6 +625,8 @@ body::before {
 
 .results-table-wrap {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 520px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
 }
@@ -649,6 +651,10 @@ body::before {
     letter-spacing: 0.5px;
     white-space: nowrap;
     border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-secondary);
 }
 
 .th-check { width: 40px; text-align: center; }
