@@ -1115,6 +1115,8 @@ body::before {
         white-space: normal !important;
         word-break: break-word !important;
         max-width: 100% !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
     #table-splitter td:nth-child(5) { grid-area: split; }
     #table-splitter td:nth-child(6) { grid-area: remark; }
@@ -1129,6 +1131,14 @@ body::before {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+    }
+    
+    .results-table .remark-cell.expanded {
+        white-space: normal !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
     
     .split-controls {
