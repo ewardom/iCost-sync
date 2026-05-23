@@ -813,7 +813,7 @@ body::before {
 
 .split-btn.active {
     background: var(--accent-a);
-    color: white;
+    color: var(--bg-primary); /* Texto oscuro de alto contraste */
     box-shadow: var(--shadow-sm);
 }
 
