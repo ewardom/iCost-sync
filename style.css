@@ -1047,35 +1047,35 @@ body::before {
     #table-missing-a tr, 
     #table-missing-b tr {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: 18px 1fr auto;
         grid-template-areas: 
             "check date amount"
             "check type remark"
             "cat cat subcat";
-        gap: 8px 12px;
+        gap: 6px 8px;
         margin-bottom: 12px;
         border: none !important; /* Quitar borde tosco */
         border-radius: var(--radius-md);
         background: linear-gradient(135deg, var(--bg-card), rgba(11, 33, 29, 0.4));
-        padding: 12px;
+        padding: 10px 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     /* Splitter Table Card View (Banorte) */
     #table-splitter tr {
         display: grid;
-        grid-template-columns: auto 1fr auto;
+        grid-template-columns: 18px 1fr auto;
         grid-template-areas: 
             "check date amount"
-            "check concept concept"
+            "concept concept concept"
             "split split split"
             "remark remark remark";
-        gap: 8px 12px;
+        gap: 6px 8px;
         margin-bottom: 12px;
         border: none !important; /* Quitar borde tosco */
         border-radius: var(--radius-md);
         background: linear-gradient(135deg, var(--bg-card), rgba(11, 33, 29, 0.4));
-        padding: 12px;
+        padding: 10px 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
@@ -1088,7 +1088,13 @@ body::before {
     }
 
     /* Mapeo para Comparer Tables */
-    #table-missing-a td:nth-child(1), #table-missing-b td:nth-child(1) { grid-area: check; align-self: center; justify-self: center; }
+    #table-missing-a td:nth-child(1), #table-missing-b td:nth-child(1) { 
+        grid-area: check; 
+        align-self: center; 
+        justify-self: center; 
+        padding: 0 !important;
+        width: 18px !important;
+    }
     #table-missing-a td:nth-child(2), #table-missing-b td:nth-child(2) { grid-area: date; }
     #table-missing-a td:nth-child(3), #table-missing-b td:nth-child(3) { grid-area: amount; align-items: flex-end; }
     #table-missing-a td:nth-child(4), #table-missing-b td:nth-child(4) { grid-area: type; }
@@ -1098,9 +1104,25 @@ body::before {
     #table-missing-a td:nth-child(8), #table-missing-b td:nth-child(8) { display: none !important; } /* Ocultar movimiento original en móvil */
 
     /* Mapeo para Splitter Table */
-    #table-splitter td:nth-child(1) { grid-area: check; align-self: center; justify-self: center; }
-    #table-splitter td:nth-child(2) { grid-area: date; }
-    #table-splitter td:nth-child(3) { grid-area: amount; align-items: flex-end; }
+    #table-splitter td:nth-child(1) {
+        grid-area: check;
+        align-self: center;
+        justify-self: center;
+        padding: 0 !important;
+        width: 18px !important;
+    }
+    #table-splitter td:nth-child(2) {
+        grid-area: date;
+        padding: 0 !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+    }
+    #table-splitter td:nth-child(3) {
+        grid-area: amount;
+        align-items: flex-end;
+        padding: 0 !important;
+        font-size: 13px !important;
+    }
     #table-splitter td:nth-child(4) { 
         grid-area: concept; 
         font-size: 11px; 
@@ -1109,7 +1131,11 @@ body::before {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        max-width: 220px !important;
+        min-width: 0 !important;
+        max-width: 100% !important; /* Subido a tope */
+        padding: 4px 0 !important;
+        display: block !important; /* Force block to make ellipsis and wrapping work perfectly */
+        cursor: pointer;
     }
     #table-splitter td:nth-child(4).expanded {
         white-space: normal !important;
@@ -1117,6 +1143,8 @@ body::before {
         max-width: 100% !important;
         overflow: visible !important;
         text-overflow: clip !important;
+        display: block !important;
+        padding: 4px 0 !important;
     }
     #table-splitter td:nth-child(5) { grid-area: split; }
     #table-splitter td:nth-child(6) { grid-area: remark; }
