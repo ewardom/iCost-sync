@@ -755,8 +755,9 @@ body::before {
 }
 
 #table-splitter .remark-cell {
-    white-space: normal;
-    word-break: break-word;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     max-width: 350px;
     font-size: 11px;
     line-height: 1.4;
@@ -929,10 +930,38 @@ body::before {
 
 /* ---- Responsive ---- */
 @media (max-width: 700px) {
+    .app {
+        padding: 20px 16px 40px !important;
+    }
+    .header {
+        margin-bottom: 12px !important;
+    }
+    .logo h1 {
+        font-size: 22px !important;
+    }
+    .subtitle {
+        font-size: 12px !important;
+    }
+    .main-nav {
+        margin-bottom: 16px !important;
+    }
+    .step-header {
+        margin-bottom: 10px !important;
+    }
+    .step-header h2 {
+        font-size: 16px !important;
+    }
+    .step-number {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 13px !important;
+    }
+
     .results-table-wrap {
         border: none !important;
         background: transparent !important;
-        max-height: none !important;
+        overflow-y: auto !important;
+        max-height: 380px !important; /* Scroll interno en móvil para fijar el balance */
     }
 
     .splitter-summary-card {
@@ -940,7 +969,7 @@ body::before {
         justify-content: space-between !important;
         padding: 10px 14px !important;
         gap: 8px !important;
-        margin-bottom: 20px !important;
+        margin-bottom: 16px !important;
     }
 
     .splitter-summary-card .summary-item {
@@ -1059,7 +1088,16 @@ body::before {
     #table-splitter td:nth-child(1) { grid-area: check; align-self: center; justify-self: center; }
     #table-splitter td:nth-child(2) { grid-area: date; }
     #table-splitter td:nth-child(3) { grid-area: amount; align-items: flex-end; }
-    #table-splitter td:nth-child(4) { grid-area: concept; font-size: 11px; color: var(--text-secondary); line-height: 1.3; }
+    #table-splitter td:nth-child(4) { 
+        grid-area: concept; 
+        font-size: 11px; 
+        color: var(--text-secondary); 
+        line-height: 1.3; 
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 220px !important;
+    }
     #table-splitter td:nth-child(5) { grid-area: split; }
     #table-splitter td:nth-child(6) { grid-area: remark; }
     
@@ -1070,7 +1108,9 @@ body::before {
     
     .results-table .remark-cell {
         max-width: 100% !important;
-        white-space: normal;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     .split-controls {
