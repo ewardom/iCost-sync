@@ -266,15 +266,15 @@
                     </div>
                 </div>
 
-                <div class="config-card config-full" style="max-width: 600px; margin: 0 auto;">
-                    <div class="filter-header">
-                        <h3>👤 ¿Quién es el titular de la tarjeta?</h3>
-                        <p>Para saber a quién asignarle las deudas</p>
+                <div class="config-card config-full" style="max-width: 600px; margin: 0 auto 32px;">
+                    <div class="filter-header" style="flex: 1; margin-right: 16px;">
+                        <h3>💳 Cuenta de Tarjeta en iCost</h3>
+                        <p>Escribe o selecciona el nombre exacto de la tarjeta para la exportación</p>
                     </div>
-                    <select id="splitter-owner" class="account-select" style="max-width: 200px;">
-                        <option value="A">Yo (Persona A)</option>
-                        <option value="B">Ella (Persona B)</option>
-                    </select>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                        <input type="text" id="splitter-card-name" class="inline-input" list="splitter-accounts-datalist" placeholder="Ej. Tarjeta Banorte" value="Tarjeta Banorte" style="width: 100%; min-width: 100%;">
+                        <datalist id="splitter-accounts-datalist"></datalist>
+                    </div>
                 </div>
             </section>
 
@@ -285,22 +285,30 @@
                     <h2>Divide los gastos</h2>
                 </div>
                 
-                <div class="panel-actions" style="justify-content: flex-end;">
-                    <button class="btn-export" id="export-split">
-                        📥 Exportar CSV
-                    </button>
+                <div class="panel-actions" style="justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="select-all-splitter" checked> Seleccionar todos
+                    </label>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-export" id="export-split-mine" style="background: linear-gradient(135deg, var(--accent-a), #4f46e5);">
+                            📥 Exportar para Mí
+                        </button>
+                        <button class="btn-export" id="export-split-hers" style="background: linear-gradient(135deg, var(--accent-b), #db2777);">
+                            📥 Exportar para Ella
+                        </button>
+                    </div>
                 </div>
 
                 <div class="results-table-wrap">
                     <table class="results-table" id="table-splitter">
                         <thead>
                             <tr>
+                                <th class="th-check"><input type="checkbox" checked id="select-all-splitter-table"></th>
                                 <th>Fecha</th>
                                 <th>Monto</th>
                                 <th>Concepto</th>
                                 <th>División</th>
-                                <th>Categoría Primaria</th>
-                                <th>Subcategoría</th>
+                                <th>Remark</th>
                             </tr>
                         </thead>
                         <tbody></tbody>

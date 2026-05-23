@@ -262,7 +262,7 @@ function compareData() {
 
 // ---- Generate iCost import CSV ----
 function generateImportCSV(missingItems, otherPersonAccount) {
-    const headers = ['日期','类型','金额','一级分类','二级分类','账户1','账户2','备注','货币','标签'];
+    const headers = ['Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag'];
     const lines = [headers.join(',')];
 
     missingItems.forEach(item => {
@@ -278,7 +278,7 @@ function generateImportCSV(missingItems, otherPersonAccount) {
             const subcategory = item.selectedSubcategory || '';
             lines.push([
                 date,
-                '支出',
+                'Expense',
                 amount,
                 csvEscape(category),
                 csvEscape(subcategory),
@@ -292,7 +292,7 @@ function generateImportCSV(missingItems, otherPersonAccount) {
             const sourceAccount = item.selectedAccount || '';
             lines.push([
                 date,
-                '转账',
+                'Transfer',
                 amount,
                 '',
                 '',
@@ -817,8 +817,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 splitType: '5050', // '5050', 'mine', 'hers', 'manual'
                 amountMine: t.amount / 2,
                 amountHers: t.amount / 2,
-                category: 'Comida', // Default
-                subcategory: ''
+                remark: '', // Vacío y libre de inicio
+                selected: true // track selection state
             }));
 
             dropLoading.classList.add('hidden');
@@ -836,6 +836,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     primary: p,
                     secondaries: rawCats.secondaryMap[p] || []
                 }));
+            }
+
+            // Populate accounts datalist from Comparison step (Step 1)
+            const parsedAccounts = [];
+            if (state.dataA) parsedAccounts.push(...getAccounts(state.dataA));
+            if (state.dataB) parsedAccounts.push(...getAccounts(state.dataB));
+            const uniqueAccounts = [...new Set(parsedAccounts)].sort();
+            
+            const dl = $('#splitter-accounts-datalist');
+            if (dl) {
+                dl.innerHTML = '';
+                uniqueAccounts.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a;
+                    dl.appendChild(opt);
+                });
+                
+                // If there are parsed accounts, pre-fill '#splitter-card-name' with the first one
+                if (uniqueAccounts.length > 0) {
+                    $('#splitter-card-name').value = uniqueAccounts[0];
+                }
             }
 
             renderSplitterTable();
@@ -857,6 +878,15 @@ document.addEventListener('DOMContentLoaded', () => {
         state.splitterData.forEach((item, index) => {
             const tr = document.createElement('tr');
             
+            // Checkbox cell
+            const tdCheck = document.createElement('td');
+            tdCheck.className = 'th-check';
+            tdCheck.innerHTML = `<input type="checkbox" ${item.selected ? 'checked' : ''} data-idx="${index}">`;
+            tdCheck.querySelector('input').addEventListener('change', (e) => {
+                item.selected = e.target.checked;
+                updateSplitterSelectAllState();
+            });
+
             // Date cell
             const tdDate = document.createElement('td');
             tdDate.setAttribute('data-label', 'FECHA');
@@ -938,130 +968,111 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
             
-            // Primary Category
-            const tdCat = document.createElement('td');
-            tdCat.setAttribute('data-label', 'CATEGORÍA');
-            const inpCat = document.createElement('input');
-            inpCat.type = 'text';
-            inpCat.className = 'inline-input';
-            inpCat.value = item.category;
-            inpCat.placeholder = "Escribe...";
-            
-            const listCatId = `cat-list-${index}`;
-            inpCat.setAttribute('list', listCatId);
-            const dlCat = document.createElement('datalist');
-            dlCat.id = listCatId;
-
-            let categories = state.categories.length ? state.categories : [
-                { primary: 'Comida', secondaries: [] },
-                { primary: 'Compras', secondaries: [] },
-                { primary: 'Transporte', secondaries: [] },
-                { primary: 'Vida', secondaries: [] }
-            ];
-            categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.primary;
-                dlCat.appendChild(opt);
+            // Remark cell
+            const tdRemark = document.createElement('td');
+            tdRemark.setAttribute('data-label', 'REMARK');
+            const inpRemark = document.createElement('input');
+            inpRemark.type = 'text';
+            inpRemark.className = 'inline-input remark-input';
+            inpRemark.value = item.remark || '';
+            inpRemark.placeholder = "Agregar nota...";
+            inpRemark.addEventListener('input', e => {
+                item.remark = e.target.value.trim();
             });
+            tdRemark.appendChild(inpRemark);
             
-            // Subcategory
-            const tdSub = document.createElement('td');
-            tdSub.setAttribute('data-label', 'SUBCATEGORÍA');
-            const inpSub = document.createElement('input');
-            inpSub.type = 'text';
-            inpSub.className = 'inline-input';
-            inpSub.value = item.subcategory;
-            inpSub.placeholder = "Opcional...";
-            
-            const listSubId = `subcat-list-${index}`;
-            inpSub.setAttribute('list', listSubId);
-            const dlSub = document.createElement('datalist');
-            dlSub.id = listSubId;
-            
-            const updateSubcategories = (primaryCat) => {
-                dlSub.innerHTML = '';
-                const catObj = categories.find(c => c.primary === primaryCat);
-                if (catObj && catObj.secondaries.length > 0) {
-                    catObj.secondaries.forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub;
-                        dlSub.appendChild(opt);
-                    });
-                }
-            };
-            
-            // Populate subcategories for the default primary category immediately
-            updateSubcategories(item.category);
-            
-            inpCat.addEventListener('change', e => {
-                item.category = e.target.value.trim();
-                // Only reset subcategory if primary changed
-                updateSubcategories(item.category);
-            });
-            inpSub.addEventListener('change', e => {
-                item.subcategory = e.target.value.trim();
-            });
-            
-            updateSubcategories(item.category);
-            tdCat.appendChild(inpCat);
-            tdCat.appendChild(dlCat);
-            tdSub.appendChild(inpSub);
-            tdSub.appendChild(dlSub);
-            
+            tr.appendChild(tdCheck);
             tr.appendChild(tdDate);
             tr.appendChild(tdAmount);
             tr.appendChild(tdConcept);
             tr.appendChild(tdSplit);
-            tr.appendChild(tdCat);
-            tr.appendChild(tdSub);
+            tr.appendChild(tdRemark);
             
             tbody.appendChild(tr);
         });
     }
 
-    $('#export-split').addEventListener('click', () => {
-        state.splitterOwner = $('#splitter-owner').value;
+    function updateSplitterSelectAllState() {
+        const total = state.splitterData.length;
+        const selected = state.splitterData.filter(t => t.selected).length;
+        const checked = total > 0 && total === selected;
         
-        if (!state.accountAforB && state.splitterOwner === 'A') {
-            const userInp = prompt("Ingresa el nombre exacto de la cuenta que usas en iCost para representar a tu novia:");
-            if (!userInp) return;
-            state.accountAforB = userInp.trim();
+        const cbMain = $('#select-all-splitter');
+        const cbTable = $('#select-all-splitter-table');
+        if (cbMain) cbMain.checked = checked;
+        if (cbTable) cbTable.checked = checked;
+    }
+
+    function exportSplitDataFor(target) {
+        const cardName = ($('#splitter-card-name').value || 'Tarjeta Banorte').trim();
+        
+        // Filter only selected transactions
+        const selectedItems = state.splitterData.filter(item => item.selected);
+        if (selectedItems.length === 0) {
+            alert("Por favor, selecciona al menos un gasto para exportar.");
+            return;
         }
         
         const lines = [];
-        lines.push(['日期', '类型', '金额', '一级分类', '二级分类', '账户1', '账户2', '备注', '货币', '标签'].join(','));
+        lines.push(['Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag'].join(','));
         
-        state.splitterData.forEach(item => {
+        let exportedCount = 0;
+        selectedItems.forEach(item => {
             const dateStr = item.date + ' 12:00:00';
+            const amount = target === 'mine' ? item.amountMine : item.amountHers;
             
-            if (state.splitterOwner === 'A') {
-                if (item.amountMine > 0) {
-                    lines.push([
-                        dateStr, '支出', item.amountMine.toFixed(2),
-                        csvEscape(item.category), csvEscape(item.subcategory),
-                        '', '', csvEscape(item.description), '', ''
-                    ].join(','));
-                }
-                if (item.amountHers > 0) {
-                    lines.push([
-                        dateStr, '转账', item.amountHers.toFixed(2),
-                        '', '', '', csvEscape(state.accountAforB),
-                        csvEscape(item.description), '', ''
-                    ].join(','));
-                }
-            } else {
-                if (item.amountMine > 0) {
-                    lines.push([
-                        dateStr, '支出', item.amountMine.toFixed(2),
-                        csvEscape(item.category), csvEscape(item.subcategory),
-                        csvEscape(state.accountAforB), '', csvEscape(item.description), '', ''
-                    ].join(','));
-                }
+            if (amount > 0) {
+                exportedCount++;
+                lines.push([
+                    dateStr,
+                    'Expense',
+                    amount.toFixed(2),
+                    '',
+                    '',
+                    csvEscape(cardName),
+                    '',
+                    csvEscape(item.remark || ""),
+                    '',
+                    ''
+                ].join(','));
             }
         });
+        
+        if (exportedCount === 0) {
+            alert("No hay gastos con monto mayor a $0 para exportar para esta persona.");
+            return;
+        }
 
-        const csvContent = lines.join('\n');
-        downloadCSV(csvContent, 'gastos_divididos_banorte.csv');
+        const csvContent = '\uFEFF' + lines.join('\n');
+        const filename = target === 'mine' ? 'mis_gastos_banorte.csv' : 'sus_gastos_banorte.csv';
+        downloadCSV(csvContent, filename);
+    }
+
+    const selectAllSplitterHandler = e => {
+        const checked = e.target.checked;
+        state.splitterData.forEach(t => t.selected = checked);
+        
+        // Sync checkboxes in UI
+        $$('#table-splitter tbody input[type="checkbox"]').forEach(cb => cb.checked = checked);
+        
+        const cbMain = $('#select-all-splitter');
+        const cbTable = $('#select-all-splitter-table');
+        if (cbMain) cbMain.checked = checked;
+        if (cbTable) cbTable.checked = checked;
+    };
+
+    const cbMain = $('#select-all-splitter');
+    if (cbMain) cbMain.addEventListener('change', selectAllSplitterHandler);
+
+    const cbTable = $('#select-all-splitter-table');
+    if (cbTable) cbTable.addEventListener('change', selectAllSplitterHandler);
+
+    $('#export-split-mine').addEventListener('click', () => {
+        exportSplitDataFor('mine');
+    });
+
+    $('#export-split-hers').addEventListener('click', () => {
+        exportSplitDataFor('hers');
     });
 
     $('#btn-reset-splitter').addEventListener('click', () => {
