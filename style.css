@@ -763,6 +763,19 @@ body::before {
     line-height: 1.4;
 }
 
+.clickable-concept {
+    cursor: pointer;
+    transition: var(--transition);
+}
+.clickable-concept:hover {
+    color: var(--accent-a) !important;
+}
+.clickable-concept.expanded {
+    white-space: normal !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
+}
+
 #table-splitter td:first-child {
     white-space: nowrap;
 }
@@ -1097,6 +1110,11 @@ body::before {
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         max-width: 220px !important;
+    }
+    #table-splitter td:nth-child(4).expanded {
+        white-space: normal !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
     }
     #table-splitter td:nth-child(5) { grid-area: split; }
     #table-splitter td:nth-child(6) { grid-area: remark; }

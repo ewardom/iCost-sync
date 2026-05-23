@@ -901,9 +901,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Concept cell
             const tdConcept = document.createElement('td');
             tdConcept.setAttribute('data-label', 'CONCEPTO');
-            tdConcept.className = 'remark-cell';
-            tdConcept.title = item.description;
+            tdConcept.className = 'remark-cell clickable-concept';
+            tdConcept.title = "Clic para ver descripción completa";
             tdConcept.textContent = item.description;
+            tdConcept.addEventListener('click', () => {
+                tdConcept.classList.toggle('expanded');
+            });
             
             // Split Control cell
             const tdSplit = document.createElement('td');
