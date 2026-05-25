@@ -262,17 +262,12 @@ function compareData() {
 
 // ---- Generate iCost import rows ----
 function generateImportRows(missingItems, otherPersonAccount) {
-    const headers = [
-        'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
-        'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
-        'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
-        'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
-    ];
+    const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
     const rows = [headers];
 
     missingItems.forEach(item => {
         const row = item.original;
-        const date = normalizeExportDate(getDate(row));
+        const date = formatChineseDate(getDate(row));
         const amount = getAmount(row);
         const remark = item.editedRemark !== undefined ? item.editedRemark : getRemark(row);
         const currency = getCurrency(row).replace('$', '');
@@ -282,52 +277,30 @@ function generateImportRows(missingItems, otherPersonAccount) {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
             rows.push([
-                date,                              // Date
-                'Expense',                          // Type
-                -amount,                            // Amount (Expenses must be negative in template)
-                category,                           // First-Level Category
-                subcategory,                        // Second-Level Category
-                otherPersonAccount,                 // Account 1
-                '',                                 // Account 2
-                remark,                             // Remark
-                currency,                           // Currency
-                tag,                                // Tag
-                'Gastos variables',                 // Ledger
-                '',                                 // Address
-                '',                                 // Refund
-                '',                                 // Discount
-                '',                                 // Fee
-                '',                                 // Image 1
-                '',                                 // Image 2
-                '',                                 // Image 3
-                '',                                 // Attachment 1
-                '',                                 // Attachment 2
-                ''                                  // Attachment 3
+                date,                              // 日期
+                '支出',                             // 类型
+                amount,                             // 金额 (Must be positive in standard importer)
+                category,                           // 一级分类
+                subcategory,                        // 二级分类
+                otherPersonAccount,                 // 账户1
+                '',                                 // 账户2
+                remark,                             // 备注
+                currency,                           // 货币
+                tag                                 // 标签
             ]);
         } else {
             const sourceAccount = item.selectedAccount || '';
             rows.push([
-                date,                              // Date
-                'Transfer',                         // Type
-                amount,                             // Amount
-                'Transfer',                         // First-Level Category
-                '',                                 // Second-Level Category
-                sourceAccount,                      // Account 1
-                otherPersonAccount,                 // Account 2
-                remark,                             // Remark
-                currency,                           // Currency
-                tag,                                // Tag
-                'Gastos variables',                 // Ledger
-                '',                                 // Address
-                '',                                 // Refund
-                '',                                 // Discount
-                '',                                 // Fee
-                '',                                 // Image 1
-                '',                                 // Image 2
-                '',                                 // Image 3
-                '',                                 // Attachment 1
-                '',                                 // Attachment 2
-                ''                                  // Attachment 3
+                date,                              // 日期
+                '转账',                             // 类型
+                amount,                             // 金额
+                '',                                 // 一级分类
+                '',                                 // 二级分类
+                sourceAccount,                      // 账户1
+                otherPersonAccount,                 // 账户2
+                remark,                             // 备注
+                currency,                           // 货币
+                tag                                 // 标签
             ]);
         }
     });
@@ -610,10 +583,10 @@ function formatDate(dateStr) {
     return dateStr;
 }
 
-function normalizeExportDate(dateStr) {
+function formatChineseDate(dateStr) {
     if (!dateStr) return '';
     
-    // Normalize date segments
+    // Strip existing Chinese chars if any
     let clean = dateStr.replace(/年|月/g, '/').replace(/日/g, '');
     clean = clean.replace(/-/g, '/');
     
@@ -622,17 +595,24 @@ function normalizeExportDate(dateStr) {
     let timePart = parts[1] || '12:00:00';
     
     const dateSegments = datePart.split('/');
+    let y = '', m = '', d = '';
+    
     if (dateSegments.length === 3) {
         if (dateSegments[0].length === 2 && dateSegments[2].length === 4) {
-            // Converts DD/MM/YYYY to YYYY/MM/DD
-            datePart = `${dateSegments[2]}/${dateSegments[1]}/${dateSegments[0]}`;
+            // DD/MM/YYYY
+            y = dateSegments[2];
+            m = dateSegments[1].padStart(2, '0');
+            d = dateSegments[0].padStart(2, '0');
         } else if (dateSegments[0].length === 4) {
-            // Ensure 2-digit padding for month and day
-            const y = dateSegments[0];
-            const m = dateSegments[1].padStart(2, '0');
-            const d = dateSegments[2].padStart(2, '0');
-            datePart = `${y}/${m}/${d}`;
+            // YYYY/MM/DD
+            y = dateSegments[0];
+            m = dateSegments[1].padStart(2, '0');
+            d = dateSegments[2].padStart(2, '0');
         }
+    }
+    
+    if (!y || !m || !d) {
+        return dateStr;
     }
     
     const timeSegments = timePart.split(':');
@@ -642,7 +622,7 @@ function normalizeExportDate(dateStr) {
         timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:${timeSegments[2].padStart(2, '0')}`;
     }
     
-    return `${datePart} ${timePart}`;
+    return `${y}年${m}月${d}日 ${timePart}`;
 }
 
 function getSelectedIndices(tableId) {
@@ -672,7 +652,7 @@ function downloadCSV(content, filename) {
 function downloadXLSX(rows, filename) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "收支账单");
+    XLSX.utils.book_append_sheet(wb, ws, "icost_template");
     XLSX.writeFile(wb, filename);
 }
 
@@ -1108,43 +1088,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const rows = [];
-        const headers = [
-            'Date', 'Type', 'Amount', 'First-Level Category', 'Second-Level Category', 
-            'Account 1', 'Account 2', 'Remark', 'Currency', 'Tag', 
-            'Ledger', 'Address', 'Refund', 'Discount', 'Fee', 
-            'Image 1', 'Image 2', 'Image 3', 'Attachment 1', 'Attachment 2', 'Attachment 3'
-        ];
+        const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
         rows.push(headers);
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
-            const dateStr = normalizeExportDate(item.date + ' 12:00:00');
+            const dateStr = formatChineseDate(item.date + ' 12:00:00');
             const amount = target === 'mine' ? item.amountMine : item.amountHers;
             
             if (amount > 0) {
                 exportedCount++;
                 rows.push([
-                    dateStr,                            // Date
-                    'Expense',                          // Type
-                    -amount,                            // Amount (Expenses must be negative in template)
-                    '',                                 // First-Level Category
-                    '',                                 // Second-Level Category
+                    dateStr,                            // 日期 (Date)
+                    '支出',                             // 类型 (Type)
+                    amount,                             // 金额 (Amount)
+                    '',                                 // 一级分类 (First-Level Category)
+                    '',                                 // 二级分类 (Second-Level Category)
                     cardName,                           // Account 1
                     '',                                 // Account 2
                     item.remark || "",                  // Remark
                     'MXN',                              // Currency
-                    '',                                 // Tag
-                    'Gastos variables',                 // Ledger
-                    '',                                 // Address
-                    '',                                 // Refund
-                    '',                                 // Discount
-                    '',                                 // Fee
-                    '',                                 // Image 1
-                    '',                                 // Image 2
-                    '',                                 // Image 3
-                    '',                                 // Attachment 1
-                    '',                                 // Attachment 2
-                    ''                                  // Attachment 3
+                    ''                                  // 标签 (Tag)
                 ]);
             }
         });
