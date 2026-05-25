@@ -279,7 +279,7 @@ function generateImportRows(missingItems, otherPersonAccount) {
         const tag = getTag(row);
 
         if (item.debtorType === 'expense') {
-            const category = item.selectedCategory || getPrimary(row) || 'Other';
+            const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
             rows.push([
                 date,                              // Date
@@ -1127,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dateStr,                            // Date
                     'Expense',                          // Type
                     -amount,                            // Amount (Expenses must be negative in template)
-                    'Other',                            // First-Level Category
+                    '',                                 // First-Level Category
                     '',                                 // Second-Level Category
                     cardName,                           // Account 1
                     '',                                 // Account 2
