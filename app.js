@@ -635,7 +635,7 @@ function getSelectedIndices(tableId) {
 }
 
 function downloadCSV(content, filename) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.style.display = 'none';
@@ -647,6 +647,15 @@ function downloadCSV(content, filename) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, 100);
+}
+
+function generateCSVString(rows) {
+    return rows.map(row => {
+        return row.map(cell => {
+            if (cell === null || cell === undefined) return '';
+            return csvEscape(String(cell));
+        }).join(',');
+    }).join('\n');
 }
 
 function downloadXLSX(rows, filename) {
@@ -780,14 +789,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const indices = getSelectedIndices('table-missing-a');
         const selected = indices.map(i => state.missingA[i]);
         const rows = generateImportRows(selected, state.accountAforB);
-        downloadXLSX(rows, `faltantes_${state.nameA}.xlsx`);
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, `faltantes_${state.nameA}.csv`);
     });
 
     $('#export-b').addEventListener('click', () => {
         const indices = getSelectedIndices('table-missing-b');
         const selected = indices.map(i => state.missingB[i]);
         const rows = generateImportRows(selected, state.accountBforA);
-        downloadXLSX(rows, `faltantes_${state.nameB}.xlsx`);
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, `faltantes_${state.nameB}.csv`);
     });
 
     $('#btn-reset').addEventListener('click', () => location.reload());
@@ -1099,16 +1110,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (amount > 0) {
                 exportedCount++;
                 rows.push([
-                    dateStr,                            // 日期 (Date)
-                    '支出',                             // 类型 (Type)
-                    amount,                             // 金额 (Amount)
-                    '',                                 // 一级分类 (First-Level Category)
-                    '',                                 // 二级分类 (Second-Level Category)
-                    cardName,                           // Account 1
-                    '',                                 // Account 2
-                    item.remark || "",                  // Remark
+                    dateStr,                            // 日期
+                    '支出',                             // 类型
+                    amount,                             // 金额
+                    '',                                 // 一级分类
+                    '',                                 // 二级分类
+                    cardName,                           // 账户1
+                    '',                                 // 账户2
+                    item.remark || "",                  // 备注
                     'MXN',                              // Currency
-                    ''                                  // 标签 (Tag)
+                    ''                                  // 标签
                 ]);
             }
         });
@@ -1118,8 +1129,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const filename = target === 'mine' ? 'mis_gastos_banorte.xlsx' : 'sus_gastos_banorte.xlsx';
-        downloadXLSX(rows, filename);
+        const filename = target === 'mine' ? 'mis_gastos_banorte.csv' : 'sus_gastos_banorte.csv';
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, filename);
     }
 
     const selectAllSplitterHandler = e => {
