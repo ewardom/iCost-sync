@@ -1198,6 +1198,15 @@ body::before {
         width: 100%;
         margin-top: 0;
         padding: 6px 10px;
-        font-size: 11px;
+        font-size: 16px !important;
+    }
+    
+    /* Evita el zoom automático en iOS al enfocar campos de texto o selección */
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea,
+    .name-input {
+        font-size: 16px !important;
     }
 }
