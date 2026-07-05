@@ -1127,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function exportSplitDataFor(target) {
-        const cardName = ($('#splitter-card-name').value || 'Tarjeta Banorte').trim();
+        const cardName = ($('#splitter-card-name').value || 'OneUp').trim();
         
         // Filter only selected transactions
         const selectedItems = state.splitterData.filter(item => item.selected);
@@ -1136,8 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
-        const rows = [headers];
+        const rows = [];
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
@@ -1167,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const filename = target === 'mine' ? 'mis_gastos_banorte.xlsx' : 'sus_gastos_banorte.xlsx';
+        const filename = target === 'mine' ? 'mis_gastos_oneup.xlsx' : 'sus_gastos_oneup.xlsx';
         downloadXLSX(rows, filename);
     }
 
