@@ -263,8 +263,7 @@ function compareData() {
 
 // ---- Generate iCost import rows ----
 function generateImportRows(missingItems, otherPersonAccount) {
-    const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
-    const rows = [headers];
+    const rows = [];
 
     missingItems.forEach(item => {
         const row = item.original;
@@ -275,7 +274,7 @@ function generateImportRows(missingItems, otherPersonAccount) {
         const tag = getTag(row);
 
         const formattedRemark = remark ? String(remark).trim() : null;
-        const formattedTag = tag ? (tag.startsWith('#') ? tag : '#' + tag) : null;
+        const formattedTag = formatTags(tag);
 
         if (item.debtorType === 'expense') {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
@@ -630,6 +629,16 @@ function formatTargetDate(dateStr) {
     return `${y}年${m}月${d}日 ${timePart}`;
 }
 
+function formatTags(tagStr) {
+    if (!tagStr) return null;
+    const parts = tagStr.split(/[,;\s\/]+/);
+    const cleaned = parts
+        .map(p => p.trim())
+        .filter(p => p.length > 0)
+        .map(p => p.startsWith('#') ? p : '#' + p);
+    return cleaned.length > 0 ? cleaned.join('') : null;
+}
+
 function getSelectedIndices(tableId) {
     const checkboxes = $$(`#${tableId} tbody input[type="checkbox"]`);
     const indices = [];
@@ -663,11 +672,37 @@ function generateCSVString(rows) {
     }).join('\n');
 }
 
-function downloadXLSX(rows, filename) {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "icost_template");
-    XLSX.writeFile(wb, filename);
+async function downloadXLSX(dataRows, filename) {
+    try {
+        const response = await fetch('icost_template.xlsx');
+        if (!response.ok) throw new Error("No se pudo cargar la plantilla oficial.");
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        
+        // Remove all rows after the header (row 2 and down) to clean template data
+        Object.keys(sheet).forEach(key => {
+            if (key[0] === '!') return; // skip metadata
+            const rowNumber = parseInt(key.replace(/^[A-Z]+/i, ''));
+            if (rowNumber > 1) {
+                delete sheet[key];
+            }
+        });
+        
+        // Add new rows starting from row 2
+        XLSX.utils.sheet_add_aoa(sheet, dataRows, { origin: 'A2' });
+        
+        // Recalculate sheet ref range
+        const range = XLSX.utils.decode_range(sheet['!ref']);
+        range.e.r = range.s.r + dataRows.length;
+        sheet['!ref'] = XLSX.utils.encode_range(range);
+        
+        XLSX.writeFile(workbook, filename);
+    } catch (error) {
+        console.error(error);
+        alert("Error al generar el archivo Excel a partir de la plantilla: " + error.message);
+    }
 }
 
 // ---- File handling ----
