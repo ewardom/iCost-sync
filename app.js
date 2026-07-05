@@ -86,11 +86,12 @@ function getAmount(row)    {
 }
 function getPrimary(row)   { return getField(row, 'First-Level Category', '一级分类', '分类', 'Basic Category', '类别'); }
 function getSecondary(row) { return getField(row, 'Second-Level Category', '二级分类', '子分类', 'Secondary Category', '子类别'); }
-function getAccount1(row)  { return getField(row, 'Account 1', '账户1', '账户', 'Account', '资产账户'); }
-function getAccount2(row)  { return getField(row, 'Account 2', '账户2', 'Account2', '转入账户'); }
+function getAccount1(row)  { return getField(row, 'Account 01', 'Account 1', '账户1', '账户', 'Account', '资产账户'); }
+function getAccount2(row)  { return getField(row, 'Account 02', 'Account 2', '账户2', 'Account2', '转入账户'); }
 function getRemark(row)    { return getField(row, 'Remark', '备注', 'Note', 'Notes', '说明'); }
 function getCurrency(row)  { return getField(row, 'Currency', '货币', '币种') || 'MXN'; }
 function getTag(row)       { return getField(row, 'Tag', '标签', 'Tags', 'Label'); }
+function getLedger(row)    { return getField(row, 'Ledger', '账本') || 'Default'; }
 
 // ---- Account helpers ----
 function getAccounts(data) {
@@ -262,45 +263,90 @@ function compareData() {
 
 // ---- Generate iCost import rows ----
 function generateImportRows(missingItems, otherPersonAccount) {
-    const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
+    const headers = [
+        "Date",
+        "Type",
+        "Amount",
+        "First-Level Category",
+        "Second-Level Category",
+        "Account 01",
+        "Account 02",
+        "Remark",
+        "Currency",
+        "Tag",
+        "Ledger",
+        "Address",
+        "Refund",
+        "Discount",
+        "Fee",
+        "图片链接1",
+        "图片链接2",
+        "图片链接3",
+        "Attachment 01",
+        "Attachment 02",
+        "Attachment 03"
+    ];
     const rows = [headers];
 
     missingItems.forEach(item => {
         const row = item.original;
-        const date = formatChineseDate(getDate(row));
+        const date = formatTargetDate(getDate(row));
         const amount = getAmount(row);
         const remark = item.editedRemark !== undefined ? item.editedRemark : getRemark(row);
         const currency = getCurrency(row).replace('$', '');
         const tag = getTag(row);
+        const ledger = getLedger(row);
 
         if (item.debtorType === 'expense') {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
             rows.push([
-                date,                              // 日期
-                '支出',                             // 类型
-                amount,                             // 金额 (Must be positive in standard importer)
-                category,                           // 一级分类
-                subcategory,                        // 二级分类
-                otherPersonAccount,                 // 账户1
-                '',                                 // 账户2
-                remark,                             // 备注
-                currency,                           // 货币
-                tag                                 // 标签
+                date,                              // Date
+                'Expense',                         // Type
+                -amount,                           // Amount (negative for expense)
+                category,                          // First-Level Category
+                subcategory,                       // Second-Level Category
+                otherPersonAccount,                // Account 01
+                '',                                // Account 02
+                remark,                            // Remark
+                currency,                          // Currency
+                tag,                               // Tag
+                ledger,                            // Ledger
+                '',                                // Address
+                '',                                // Refund
+                '',                                // Discount
+                '',                                // Fee
+                '',                                // 图片链接1
+                '',                                // 图片链接2
+                '',                                // 图片链接3
+                '',                                // Attachment 01
+                '',                                // Attachment 02
+                ''                                 // Attachment 03
             ]);
         } else {
             const sourceAccount = item.selectedAccount || '';
             rows.push([
-                date,                              // 日期
-                '转账',                             // 类型
-                amount,                             // 金额
-                '',                                 // 一级分类
-                '',                                 // 二级分类
-                sourceAccount,                      // 账户1
-                otherPersonAccount,                 // 账户2
-                remark,                             // 备注
-                currency,                           // 货币
-                tag                                 // 标签
+                date,                              // Date
+                'Transfer',                        // Type
+                amount,                            // Amount
+                '',                                // First-Level Category
+                '',                                // Second-Level Category
+                sourceAccount,                     // Account 01
+                otherPersonAccount,                // Account 02
+                remark,                            // Remark
+                currency,                          // Currency
+                tag,                               // Tag
+                ledger,                            // Ledger
+                '',                                // Address
+                '',                                // Refund
+                '',                                // Discount
+                '',                                // Fee
+                '',                                // 图片链接1
+                '',                                // 图片链接2
+                '',                                // 图片链接3
+                '',                                // Attachment 01
+                '',                                // Attachment 02
+                ''                                 // Attachment 03
             ]);
         }
     });
@@ -583,7 +629,7 @@ function formatDate(dateStr) {
     return dateStr;
 }
 
-function formatChineseDate(dateStr) {
+function formatTargetDate(dateStr) {
     if (!dateStr) return '';
     
     // Strip existing Chinese chars if any
@@ -622,7 +668,7 @@ function formatChineseDate(dateStr) {
         timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:${timeSegments[2].padStart(2, '0')}`;
     }
     
-    return `${y}年${m}月${d}日 ${timePart}`;
+    return `${y}/${m}/${d} ${timePart}`;
 }
 
 function getSelectedIndices(tableId) {
@@ -661,7 +707,7 @@ function generateCSVString(rows) {
 function downloadXLSX(rows, filename) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "icost_template");
+    XLSX.utils.book_append_sheet(wb, ws, "收支账单");
     XLSX.writeFile(wb, filename);
 }
 
@@ -789,16 +835,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const indices = getSelectedIndices('table-missing-a');
         const selected = indices.map(i => state.missingA[i]);
         const rows = generateImportRows(selected, state.accountAforB);
-        const csvContent = generateCSVString(rows);
-        downloadCSV(csvContent, `faltantes_${state.nameA}.csv`);
+        downloadXLSX(rows, `faltantes_${state.nameA}.xlsx`);
     });
 
     $('#export-b').addEventListener('click', () => {
         const indices = getSelectedIndices('table-missing-b');
         const selected = indices.map(i => state.missingB[i]);
         const rows = generateImportRows(selected, state.accountBforA);
-        const csvContent = generateCSVString(rows);
-        downloadCSV(csvContent, `faltantes_${state.nameB}.csv`);
+        downloadXLSX(rows, `faltantes_${state.nameB}.xlsx`);
     });
 
     $('#btn-reset').addEventListener('click', () => location.reload());
@@ -1098,28 +1142,61 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const rows = [];
-        const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
-        rows.push(headers);
+        const headers = [
+            "Date",
+            "Type",
+            "Amount",
+            "First-Level Category",
+            "Second-Level Category",
+            "Account 01",
+            "Account 02",
+            "Remark",
+            "Currency",
+            "Tag",
+            "Ledger",
+            "Address",
+            "Refund",
+            "Discount",
+            "Fee",
+            "图片链接1",
+            "图片链接2",
+            "图片链接3",
+            "Attachment 01",
+            "Attachment 02",
+            "Attachment 03"
+        ];
+        const rows = [headers];
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
-            const dateStr = formatChineseDate(item.date + ' 12:00:00');
+            const dateStr = formatTargetDate(item.date + ' 12:00:00');
             const amount = target === 'mine' ? item.amountMine : item.amountHers;
+            const remark = item.remark || item.description || "";
             
             if (amount > 0) {
                 exportedCount++;
                 rows.push([
-                    dateStr,                            // 日期
-                    '支出',                             // 类型
-                    amount,                             // 金额
-                    '',                                 // 一级分类
-                    '',                                 // 二级分类
-                    cardName,                           // 账户1
-                    '',                                 // 账户2
-                    item.remark || "",                  // 备注
+                    dateStr,                            // Date
+                    'Expense',                          // Type
+                    -amount,                            // Amount (negative for expense)
+                    '',                                 // First-Level Category
+                    '',                                 // Second-Level Category
+                    cardName,                           // Account 01
+                    '',                                 // Account 02
+                    remark,                             // Remark
                     'MXN',                              // Currency
-                    ''                                  // 标签
+                    '',                                 // Tag
+                    'Default',                          // Ledger
+                    '',                                 // Address
+                    '',                                 // Refund
+                    '',                                 // Discount
+                    '',                                 // Fee
+                    '',                                 // 图片链接1
+                    '',                                 // 图片链接2
+                    '',                                 // 图片链接3
+                    '',                                 // Attachment 01
+                    '',                                 // Attachment 02
+                    ''                                  // Attachment 03
                 ]);
             }
         });
@@ -1129,9 +1206,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const filename = target === 'mine' ? 'mis_gastos_banorte.csv' : 'sus_gastos_banorte.csv';
-        const csvContent = generateCSVString(rows);
-        downloadCSV(csvContent, filename);
+        const filename = target === 'mine' ? 'mis_gastos_banorte.xlsx' : 'sus_gastos_banorte.xlsx';
+        downloadXLSX(rows, filename);
     }
 
     const selectAllSplitterHandler = e => {
