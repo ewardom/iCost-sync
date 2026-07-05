@@ -263,29 +263,7 @@ function compareData() {
 
 // ---- Generate iCost import rows ----
 function generateImportRows(missingItems, otherPersonAccount) {
-    const headers = [
-        "Date",
-        "Type",
-        "Amount",
-        "First-Level Category",
-        "Second-Level Category",
-        "Account 01",
-        "Account 02",
-        "Remark",
-        "Currency",
-        "Tag",
-        "Ledger",
-        "Address",
-        "Refund",
-        "Discount",
-        "Fee",
-        "图片链接1",
-        "图片链接2",
-        "图片链接3",
-        "Attachment 01",
-        "Attachment 02",
-        "Attachment 03"
-    ];
+    const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
     const rows = [headers];
 
     missingItems.forEach(item => {
@@ -295,58 +273,35 @@ function generateImportRows(missingItems, otherPersonAccount) {
         const remark = item.editedRemark !== undefined ? item.editedRemark : getRemark(row);
         const currency = getCurrency(row).replace('$', '');
         const tag = getTag(row);
-        const ledger = getLedger(row);
 
         if (item.debtorType === 'expense') {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
             const subcategory = item.selectedSubcategory || '';
             rows.push([
-                date,                              // Date
-                'Expense',                         // Type
-                -amount,                           // Amount (negative for expense)
-                category,                          // First-Level Category
-                subcategory,                       // Second-Level Category
-                otherPersonAccount,                // Account 01
-                '',                                // Account 02
-                remark,                            // Remark
-                currency,                          // Currency
-                tag,                               // Tag
-                ledger,                            // Ledger
-                '',                                // Address
-                '',                                // Refund
-                '',                                // Discount
-                '',                                // Fee
-                '',                                // 图片链接1
-                '',                                // 图片链接2
-                '',                                // 图片链接3
-                '',                                // Attachment 01
-                '',                                // Attachment 02
-                ''                                 // Attachment 03
+                date,                              // 日期
+                '支出',                             // 类型
+                amount,                            // 金额
+                category,                          // 一级分类
+                subcategory,                       // 二级分类
+                otherPersonAccount,                // 账户1
+                '',                                // 账户2
+                remark,                            // 备注
+                currency,                          // 货币
+                tag                                // 标签
             ]);
         } else {
             const sourceAccount = item.selectedAccount || '';
             rows.push([
-                date,                              // Date
-                'Transfer',                        // Type
-                amount,                            // Amount
-                '',                                // First-Level Category
-                '',                                // Second-Level Category
-                sourceAccount,                     // Account 01
-                otherPersonAccount,                // Account 02
-                remark,                            // Remark
-                currency,                          // Currency
-                tag,                               // Tag
-                ledger,                            // Ledger
-                '',                                // Address
-                '',                                // Refund
-                '',                                // Discount
-                '',                                // Fee
-                '',                                // 图片链接1
-                '',                                // 图片链接2
-                '',                                // 图片链接3
-                '',                                // Attachment 01
-                '',                                // Attachment 02
-                ''                                 // Attachment 03
+                date,                              // 日期
+                '转账',                             // 类型
+                amount,                            // 金额
+                '',                                // 一级分类
+                '',                                // 二级分类
+                sourceAccount,                     // 账户1
+                otherPersonAccount,                // 账户2
+                remark,                            // 备注
+                currency,                          // 货币
+                tag                                // 标签
             ]);
         }
     });
@@ -668,7 +623,7 @@ function formatTargetDate(dateStr) {
         timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:${timeSegments[2].padStart(2, '0')}`;
     }
     
-    return `${y}/${m}/${d} ${timePart}`;
+    return `${y}年${m}月${d}日 ${timePart}`;
 }
 
 function getSelectedIndices(tableId) {
@@ -707,7 +662,7 @@ function generateCSVString(rows) {
 function downloadXLSX(rows, filename) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "收支账单");
+    XLSX.utils.book_append_sheet(wb, ws, "icost_template");
     XLSX.writeFile(wb, filename);
 }
 
@@ -1142,29 +1097,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const headers = [
-            "Date",
-            "Type",
-            "Amount",
-            "First-Level Category",
-            "Second-Level Category",
-            "Account 01",
-            "Account 02",
-            "Remark",
-            "Currency",
-            "Tag",
-            "Ledger",
-            "Address",
-            "Refund",
-            "Discount",
-            "Fee",
-            "图片链接1",
-            "图片链接2",
-            "图片链接3",
-            "Attachment 01",
-            "Attachment 02",
-            "Attachment 03"
-        ];
+        const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
         const rows = [headers];
         
         let exportedCount = 0;
@@ -1176,27 +1109,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (amount > 0) {
                 exportedCount++;
                 rows.push([
-                    dateStr,                            // Date
-                    'Expense',                          // Type
-                    -amount,                            // Amount (negative for expense)
-                    '',                                 // First-Level Category
-                    '',                                 // Second-Level Category
-                    cardName,                           // Account 01
-                    '',                                 // Account 02
-                    remark,                             // Remark
-                    'MXN',                              // Currency
-                    '',                                 // Tag
-                    'Default',                          // Ledger
-                    '',                                 // Address
-                    '',                                 // Refund
-                    '',                                 // Discount
-                    '',                                 // Fee
-                    '',                                 // 图片链接1
-                    '',                                 // 图片链接2
-                    '',                                 // 图片链接3
-                    '',                                 // Attachment 01
-                    '',                                 // Attachment 02
-                    ''                                  // Attachment 03
+                    dateStr,                            // 日期
+                    '支出',                             // 类型
+                    amount,                             // 金额
+                    '',                                 // 一级分类
+                    '',                                 // 二级分类
+                    cardName,                           // 账户1
+                    '',                                 // 账户2
+                    remark,                             // 备注
+                    'MXN',                              // 货币
+                    ''                                  // 标签
                 ]);
             }
         });
