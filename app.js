@@ -274,34 +274,37 @@ function generateImportRows(missingItems, otherPersonAccount) {
         const currency = getCurrency(row).replace('$', '');
         const tag = getTag(row);
 
+        const formattedRemark = remark ? String(remark).trim() : null;
+        const formattedTag = tag ? (tag.startsWith('#') ? tag : '#' + tag) : null;
+
         if (item.debtorType === 'expense') {
             const category = item.selectedCategory || getPrimary(row) || 'Otro';
-            const subcategory = item.selectedSubcategory || '';
+            const subcategory = item.selectedSubcategory || null;
             rows.push([
                 date,                              // 日期
                 '支出',                             // 类型
                 amount,                            // 金额
                 category,                          // 一级分类
                 subcategory,                       // 二级分类
-                otherPersonAccount,                // 账户1
-                '',                                // 账户2
-                remark,                            // 备注
-                currency,                          // 货币
-                tag                                // 标签
+                otherPersonAccount || null,        // 账户1
+                null,                              // 账户2
+                formattedRemark,                   // 备注
+                currency || null,                  // 货币
+                formattedTag                       // 标签
             ]);
         } else {
-            const sourceAccount = item.selectedAccount || '';
+            const sourceAccount = item.selectedAccount || null;
             rows.push([
                 date,                              // 日期
                 '转账',                             // 类型
                 amount,                            // 金额
-                '',                                // 一级分类
-                '',                                // 二级分类
+                null,                              // 一级分类
+                null,                              // 二级分类
                 sourceAccount,                     // 账户1
-                otherPersonAccount,                // 账户2
-                remark,                            // 备注
-                currency,                          // 货币
-                tag                                // 标签
+                otherPersonAccount || null,        // 账户2
+                formattedRemark,                   // 备注
+                currency || null,                  // 货币
+                formattedTag                       // 标签
             ]);
         }
     });
@@ -620,7 +623,8 @@ function formatTargetDate(dateStr) {
     if (timeSegments.length === 2) {
         timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:00`;
     } else if (timeSegments.length === 3) {
-        timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:${timeSegments[2].padStart(2, '0')}`;
+        let seconds = timeSegments[2].split('.')[0]; // strip milliseconds
+        timePart = `${timeSegments[0].padStart(2, '0')}:${timeSegments[1].padStart(2, '0')}:${seconds.padStart(2, '0')}`;
     }
     
     return `${y}年${m}月${d}日 ${timePart}`;
@@ -1112,13 +1116,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     dateStr,                            // 日期
                     '支出',                             // 类型
                     amount,                             // 金额
-                    '',                                 // 一级分类
-                    '',                                 // 二级分类
-                    cardName,                           // 账户1
-                    '',                                 // 账户2
-                    remark,                             // 备注
+                    null,                               // 一级分类
+                    null,                               // 二级分类
+                    cardName || null,                   // 账户1
+                    null,                               // 账户2
+                    remark ? String(remark).trim() : null, // 备注
                     'MXN',                              // 货币
-                    ''                                  // 标签
+                    null                                // 标签
                 ]);
             }
         });
