@@ -263,7 +263,8 @@ function compareData() {
 
 // ---- Generate iCost import rows ----
 function generateImportRows(missingItems, otherPersonAccount) {
-    const rows = [];
+    const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
+    const rows = [headers];
 
     missingItems.forEach(item => {
         const row = item.original;
@@ -829,14 +830,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const indices = getSelectedIndices('table-missing-a');
         const selected = indices.map(i => state.missingA[i]);
         const rows = generateImportRows(selected, state.accountAforB);
-        downloadXLSX(rows, `faltantes_${state.nameA}.xlsx`);
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, `faltantes_${state.nameA}.csv`);
     });
 
     $('#export-b').addEventListener('click', () => {
         const indices = getSelectedIndices('table-missing-b');
         const selected = indices.map(i => state.missingB[i]);
         const rows = generateImportRows(selected, state.accountBforA);
-        downloadXLSX(rows, `faltantes_${state.nameB}.xlsx`);
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, `faltantes_${state.nameB}.csv`);
     });
 
     $('#btn-reset').addEventListener('click', () => location.reload());
@@ -1136,7 +1139,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const rows = [];
+        const headers = ["日期", "类型", "金额", "一级分类", "二级分类", "账户1", "账户2", "备注", "货币", "标签"];
+        const rows = [headers];
         
         let exportedCount = 0;
         selectedItems.forEach(item => {
@@ -1166,8 +1170,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const filename = target === 'mine' ? 'mis_gastos_oneup.xlsx' : 'sus_gastos_oneup.xlsx';
-        downloadXLSX(rows, filename);
+        const filename = target === 'mine' ? 'mis_gastos_oneup.csv' : 'sus_gastos_oneup.csv';
+        const csvContent = generateCSVString(rows);
+        downloadCSV(csvContent, filename);
     }
 
     const selectAllSplitterHandler = e => {
